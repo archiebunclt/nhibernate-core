@@ -95,6 +95,28 @@ namespace NHibernate.Test.NHSpecificTest.NH3050
 			}
 		}
 
+		[Test]
+		public void NoViableAltExceptionWhenGCRunsBetweenQueryPrepartionAndExecution()
+		{
+			Assert.IsTrue(TrySetQueryPlanCacheSize(Sfi, 1));
+
+			using (ISession session = OpenSession())
+			using (session.BeginTransaction())
+			{
+				var future1 = session.Query<Entity>()
+					.Where(x => x.Id == Guid.Empty)
+					.ToFuture();
+
+				var future2 = session.Query<Entity>()
+					.Where(x => x.Name == "Bob")
+					.ToFuture();
+
+				GC.Collect();
+
+				future2.ToList();
+
+			}
+		}
 		/// <summary>
 		/// Uses reflection to create a new SoftLimitMRUCache with a specified size and sets session factory query plan chache to it.
 		/// This is done like this as NHibernate does not currently provide any way to specify the query plan cache size through configuration.
