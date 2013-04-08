@@ -22,14 +22,18 @@ echo.
 echo --- TeamCity (CI) build options
 echo I.  TeamCity build menu
 echo.
+echo --- Nuget options
+echo N.  Build Nuget packages
+echo.
 
 if exist %SYSTEMROOT%\System32\choice.exe ( goto prompt-choice )
 goto prompt-set
 
 :prompt-choice
-choice /C:abcdefghi
+choice /C:abcdefghin
 
 if errorlevel 255 goto end
+if errorlevel 10 goto build-nuget
 if errorlevel 9 goto teamcity-menu
 if errorlevel 8 goto grammar
 if errorlevel 7 goto build-release-package
@@ -42,7 +46,7 @@ if errorlevel 1 goto build-visual-studio
 if errorlevel 0 goto end
 
 :prompt-set
-set /p OPT=[A, B, C, D, E, F, G, H, I]? 
+set /p OPT=[A, B, C, D, E, F, G, H, I, N]? 
 
 if /I "%OPT%"=="A" goto build-visual-studio
 if /I "%OPT%"=="B" goto help-test-setup
@@ -53,6 +57,7 @@ if /I "%OPT%"=="F" goto build-release
 if /I "%OPT%"=="G" goto build-release-package
 if /I "%OPT%"=="H" goto grammar
 if /I "%OPT%"=="I" goto teamcity-menu
+if /I "%OPT%"=="N" goto build-nuget
 goto prompt-set
 
 :help-test-setup
@@ -112,6 +117,13 @@ goto end
 
 :build-test
 %NANT% test
+goto end
+
+:build-nuget
+%NANT% -D:project.config=release clean nuget 
+echo.
+echo Assuming the build succeeded, your results will be in the build folder.
+echo.
 goto end
 
 :grammar
